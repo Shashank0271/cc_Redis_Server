@@ -1,5 +1,5 @@
 const { describe, test, expect } = require("@jest/globals");
-const  deserialize  = require("../deserializer");
+const deserialize = require("../deserializer");
 
 describe("deserialize Bulk String function", () => {
   test("Correctly deserializes a valid RESP command(1)", () => {
@@ -9,6 +9,10 @@ describe("deserialize Bulk String function", () => {
   test("Correctly deserializes an empty string", () => {
     const respCommand = "$0\r\n\r\n";
     expect(deserialize(respCommand)).toBe("");
+  });
+  test("correctly deserializes a null string", () => {
+    const respCommand = "$-1\r\n";
+    expect(deserialize(respCommand)).toBe(null);
   });
   test("Correctly deserializes a valid RESP command(2)", () => {
     const respCommand = "$6\r\nabc123\r\n";

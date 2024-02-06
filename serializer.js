@@ -1,20 +1,20 @@
-function serialize(command) {
-  //the is going to convert RESP-formatted strings into native data structures
-  const firstCharacter = command.charAt(0);
-  switch (firstCharacter) {
-    case "+":
-    case "-":
-    case ":":
-      return appendCLRF(command);
-
-    case "$":
-      return serializeBulkString(command);
-
-    case "*":
-      return serializeArray(command);
-
-    default:
-      throw new Error("unsupported type for serilization");
+function serialize(input) {
+  if (input === null) {
+    return "$-1\r\n";
+  }
+  if (typeof input === "number") {
+    return appendCLRF(`:${input}`);
+  }
+  if (typeof input === "string") {
+    const firstCharacter = input.charAt(0);
+    if (firstCharacter === "-" || firstCharacter === `+`) {
+      return appendCLRF(input);
+    }
+    return serializeBulkString(input);
+  } else if (Array.isArray(input)) {
+    return serializeArray(input);
+  } else {
+    throw new Error("unsupported type for serialization");
   }
 }
 
@@ -24,16 +24,17 @@ function appendCLRF(command) {
   return command + clrf;
 }
 
-function serializeBulkString(command) {
-  //in this case some computation is required as we need to find the length of the string and format it
-  const length = string.length;
-  if (length === 1) {
-    return appendCLRF("$-1");
-  } else {
-    return appendCLRF(`$${length}`) + appendCLRF(string.substring(1));
-  }
+function serializeBulkString(string) {
+  return appendCLRF(`$${string.length}`) + appendCLRF(string);
 }
 
-function serializeArray() {}
+function serializeArray(array) {
+  const sarray =  array.map((element) => serialize(element));
+  let message =  appendCLRF(`*${sarray.length}`);
+  sarray.forEach(element => {
+    message += element;
+  });
+  return message;
+}
 
 module.exports = serialize;

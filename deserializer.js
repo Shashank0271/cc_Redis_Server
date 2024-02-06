@@ -33,7 +33,7 @@ function deserializeSimpleString(command, pos = 0) {
 
 function deserializeError(command, pos = 0) {
   const data = command.substring(
-    command.indexOf(" ")+1,
+    command.indexOf(" ") + 1,
     command.indexOf(clrf, pos)
   );
   parsed = data.length + 3;
@@ -48,6 +48,9 @@ function deserializeInteger(command, pos = 0) {
 
 function deserializeBulkString(command, pos = 0) {
   const bytes = Number(command.substring(1, command.indexOf(clrf, pos)));
+  if (bytes == -1) {
+    return null;
+  }
   let data = "";
   let c = 0,
     index = command.indexOf(clrf) + 2;
@@ -87,4 +90,4 @@ function deserializeArray(command) {
   return elements;
 }
 
-module.exports =  deserialize ;
+module.exports = deserialize;
