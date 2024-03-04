@@ -25,29 +25,29 @@ function deserialize(command) {
 const clrf = "\r\n";
 let parsed = 0; //holds the number of characters last parsed
 
-function deserializeSimpleString(command, pos = 0) {
-  const data = command.substring(1, command.indexOf(clrf, pos));
+function deserializeSimpleString(command) {
+  const data = command.substring(1, command.indexOf(clrf));
   parsed = data.length + 3;
   return data;
 }
 
-function deserializeError(command, pos = 0) {
+function deserializeError(command) {
   const data = command.substring(
     command.indexOf(" ") + 1,
-    command.indexOf(clrf, pos)
+    command.indexOf(clrf)
   );
   parsed = data.length + 3;
   return data;
 }
 
-function deserializeInteger(command, pos = 0) {
-  const data = command.substring(1, command.indexOf(clrf, pos));
+function deserializeInteger(command) {
+  const data = command.substring(1, command.indexOf(clrf));
   parsed = data.length + 3;
   return Number(data);
 }
 
-function deserializeBulkString(command, pos = 0) {
-  const bytes = Number(command.substring(1, command.indexOf(clrf, pos)));
+function deserializeBulkString(command) {
+  const bytes = Number(command.substring(1, command.indexOf(clrf)));
   if (bytes == -1) {
     return null;
   }

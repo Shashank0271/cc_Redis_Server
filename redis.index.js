@@ -1,6 +1,7 @@
 const net = require("node:net");
 const server = net.createServer();
 const PORT = 6379;
+const commandHandler = require("./commandhandler");
 
 server.listen(6379, "127.0.0.1", () => {
   console.log(`redis server listening on port : ${PORT}`);
@@ -8,7 +9,9 @@ server.listen(6379, "127.0.0.1", () => {
 
 server.on("connection", (socket) => {
   console.log("client connected");
-  socket.on("data", (chunk) => {});
+  socket.on("data", (chunk) => {
+    commandHandler(socket, chunk);
+  });
 });
 
 server
