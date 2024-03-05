@@ -18,6 +18,9 @@ module.exports = (socket, command) => {
     case "get":
       handleGet(socket, data);
       break;
+    case "exists":
+      handleExists(socket, data);
+      break;
     default:
       socket.write(serializer("invalid input"));
       break;
@@ -33,10 +36,32 @@ handleEcho = (socket, data) => {
 };
 
 handleSet = (socket, data) => {
+  const key = data[1],
+    value = data[2];
   if (storage.get(socket) === undefined) {
     storage.set(socket, new Map());
   }
-  storage.get(socket).set(data[1], data[2]);
+  storage.get(socket).set(key, value);
+  if (data.length > 3) {
+    //set <key> <value> <ex/px/exat/pat> <time>
+    //0     1      2           3            4
+    let expirationMillis;
+    if (data[3] === "ex") {
+      expirationMillis = data[4] * 1000; //because the time is specified in seconds
+    } else if (data[3] === "px") {
+      expirationMillis = data[4];
+    } else if (data[3] === "exat") {
+      //unix time-stamp is mentioned in seconds
+      const timeStamp = new Date(data[4] * 1000);
+      expirationMillis = timeStamp - new Date();
+    } else if (data[3] === "pat") {
+      //unix time-stamp is mentioned in milliseconds
+      expirationMillis = new Date(data[4]) - new Date();
+    }
+    setTimeout(() => {
+      storage.get(socket).delete(key);
+    }, expirationMillis);
+  }
   socket.write(serializer("OK"));
 };
 
@@ -47,4 +72,18 @@ handleGet = (socket, data) => {
   } else {
     socket.write(serializer(storage.get(socket).get(key)));
   }
+};
+
+handleExists = (socket, data) => {
+  let counter = 0;
+  if (!storage.get(socket)) {
+    return socket.write(serializer(`(integer) ${counter}`));
+  }
+  for (let i = 1; i < data.length; i++) {
+    // console.log(data[i], storage.get(socket), storage.get(socket).get(data[i]));
+    if (storage.get(socket).get(data[i])) {
+      counter++;
+    }
+  }
+  socket.write(serializer(`(integer) ${counter}`));
 };
