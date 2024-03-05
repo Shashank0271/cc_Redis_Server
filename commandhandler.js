@@ -115,7 +115,16 @@ handleIncr = (socket, data) => {
   if (!storage.get(socket).get(key)) {
     storage.get(socket).set(key, 0);
   }
-  storage.get(socket).set(key, Number(storage.get(socket).get(key)) + 1);
-
-  socket.write(serializer(`(integer) ${storage.get(socket).get(key)}`));
+  console.log(
+    storage.get(socket).get(key),
+    typeof storage.get(socket).get(key)
+  );
+  if (typeof storage.get(socket).get(key) === 'number') {
+    console.log("entered if");
+    storage.get(socket).set(key, Number(storage.get(socket).get(key)) + 1);
+    socket.write(serializer(`(integer) ${storage.get(socket).get(key)}`));
+  } else {
+    console.log("entered else");
+    socket.write(serializer(`(error) value is not an integer or out of range`));
+  }
 };
