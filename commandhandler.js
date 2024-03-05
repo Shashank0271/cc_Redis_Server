@@ -21,6 +21,12 @@ module.exports = (socket, command) => {
     case "exists":
       handleExists(socket, data);
       break;
+    case "del":
+      handleDel(socket, data);
+      break;
+    case "incr":
+      handleIncr(socket, data);
+      break;
     default:
       socket.write(serializer("invalid input"));
       break;
@@ -80,10 +86,36 @@ handleExists = (socket, data) => {
     return socket.write(serializer(`(integer) ${counter}`));
   }
   for (let i = 1; i < data.length; i++) {
-    // console.log(data[i], storage.get(socket), storage.get(socket).get(data[i]));
     if (storage.get(socket).get(data[i])) {
       counter++;
     }
   }
   socket.write(serializer(`(integer) ${counter}`));
+};
+
+handleDel = (socket, data) => {
+  let counter = 0;
+  if (!storage.get(socket)) {
+    return socket.write(serializer(`(integer) ${counter}`));
+  }
+  for (let i = 1; i < data.length; i++) {
+    if (storage.get(socket).get(data[i])) {
+      counter++;
+      storage.get(socket).delete(data[i]);
+    }
+  }
+  socket.write(serializer(`(integer) ${counter}`));
+};
+
+handleIncr = (socket, data) => {
+  const key = data[1];
+  if (!storage.get(socket)) {
+    storage.set(socket, new Map());
+  }
+  if (!storage.get(socket).get(key)) {
+    storage.get(socket).set(key, 0);
+  }
+  storage.get(socket).set(key, Number(storage.get(socket).get(key)) + 1);
+
+  socket.write(serializer(`(integer) ${storage.get(socket).get(key)}`));
 };
