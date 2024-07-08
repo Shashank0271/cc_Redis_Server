@@ -23,3 +23,7 @@ PING , ECHO , GET , SET (with EX , PX , EXAT , PAT) , LPUSH , RPUSH , EXISTS , D
 - in the root folder run **npm redis.index.js** .
 - in the CLI start the redis client by executing **redis.client** (i used ubuntu , this might be different in other OS)
 - run commands from the CLI after connection has been established
+
+### To run tests:
+
+- **npm test**
