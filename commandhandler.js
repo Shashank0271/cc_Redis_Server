@@ -1,6 +1,5 @@
 const serializer = require("./serializer");
 const deserializer = require("./deserializer");
-const serialize = require("./serializer");
 
 const storage = new Map();
 
@@ -145,7 +144,7 @@ handleDecr = (socket, data) => {
   const currentValue = storage.get(socket).get(key);
   if (
     !isNaN(parseInt(currentValue)) &&
-    isValidInteger(parseInt(currentValue)-1)
+    isValidInteger(parseInt(currentValue) - 1)
   ) {
     storage.get(socket).set(key, Number(currentValue) - 1);
     socket.write(serializer(`(integer) ${storage.get(socket).get(key)}`));
@@ -160,4 +159,10 @@ const isValidInteger = (value) => {
     value <= Number.MAX_SAFE_INTEGER &&
     value >= Number.MIN_SAFE_INTEGER
   );
+};
+
+handleLpush = (socket, data) => {
+  //unshift
+  const key = data[1];
+  console.log(data.length);
 };
