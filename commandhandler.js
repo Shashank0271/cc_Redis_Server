@@ -30,7 +30,10 @@ module.exports = (socket, command) => {
     case "decr":
       handleDecr(socket, data);
       break;
-    //handle lpush
+    case "lpush":
+    case "rpush":
+      handlePush(socket, data);
+      break;
     default:
       socket.write(serializer("invalid input"));
   }
@@ -79,6 +82,7 @@ handleSet = (socket, data) => {
 handleGet = (socket, data) => {
   const key = data[1];
   if (!storage.get(socket) || !storage.get(socket).get(key)) {
+    console.log("entry not present");
     socket.write(serializer("(nil)"));
   } else {
     socket.write(serializer(storage.get(socket).get(key)));
@@ -161,8 +165,18 @@ const isValidInteger = (value) => {
   );
 };
 
-handleLpush = (socket, data) => {
-  //unshift
+handlePush = (socket, data) => {
   const key = data[1];
-  console.log(data.length);
+  if (!storage.has(socket)) {
+    storage.set(socket, new Map());
+  }
+  if (!storage.get(socket).has(key)) {
+    storage.get(socket).set(key, []);
+  }
+  const currentList = storage.get(socket).get(key);
+  for (let i = 2; i < data.length; i++) {
+    if (data[0] === "lpush") currentList.unshift(data[i]);
+    else currentList.push(data[i]);
+  }
+  socket.write(serializer(`(integer) ${storage.get(socket).get(key).length}`));
 };

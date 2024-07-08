@@ -29,9 +29,9 @@ function serializeBulkString(string) {
 }
 
 function serializeArray(array) {
-  const sarray =  array.map((element) => serialize(element));
-  let message =  appendCLRF(`*${sarray.length}`);
-  sarray.forEach(element => {
+  const sarray = array.map((element) => serialize(element));
+  let message = appendCLRF(`*${sarray.length}`);
+  sarray.forEach((element) => {
     message += element;
   });
   return message;
