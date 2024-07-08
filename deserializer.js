@@ -87,6 +87,7 @@ function deserializeArray(command) {
       return e;
     }
   }
+  console.log(`deserialized command : ${elements}`);
   return elements;
 }
 

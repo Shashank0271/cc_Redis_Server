@@ -1,5 +1,6 @@
 const serializer = require("./serializer");
 const deserializer = require("./deserializer");
+const serialize = require("./serializer");
 
 const storage = new Map();
 
@@ -27,9 +28,12 @@ module.exports = (socket, command) => {
     case "incr":
       handleIncr(socket, data);
       break;
+    case "decr":
+      handleDecr(socket, data);
+      break;
+    //handle lpush
     default:
       socket.write(serializer("invalid input"));
-      break;
   }
 };
 
@@ -42,18 +46,20 @@ handleEcho = (socket, data) => {
 };
 
 handleSet = (socket, data) => {
-  const key = data[1],
-    value = data[2];
+  const key = data[1];
+  let value = data[2];
   if (storage.get(socket) === undefined) {
     storage.set(socket, new Map());
   }
+
   storage.get(socket).set(key, value);
+
   if (data.length > 3) {
     //set <key> <value> <ex/px/exat/pat> <time>
     //0     1      2           3            4
     let expirationMillis;
     if (data[3] === "ex") {
-      expirationMillis = data[4] * 1000; //because the time is specified in seconds
+      expirationMillis = data[4] * 1000; //because the time is specified in seconds with ex
     } else if (data[3] === "px") {
       expirationMillis = data[4];
     } else if (data[3] === "exat") {
@@ -113,18 +119,45 @@ handleIncr = (socket, data) => {
     storage.set(socket, new Map());
   }
   if (!storage.get(socket).get(key)) {
+    console.log("initialized value to 0");
     storage.get(socket).set(key, 0);
   }
-  console.log(
-    storage.get(socket).get(key),
-    typeof storage.get(socket).get(key)
-  );
-  if (typeof storage.get(socket).get(key) === 'number') {
-    console.log("entered if");
-    storage.get(socket).set(key, Number(storage.get(socket).get(key)) + 1);
+  const currentValue = storage.get(socket).get(key);
+  if (
+    !isNaN(parseInt(currentValue)) &&
+    isValidInteger(1 + parseInt(currentValue))
+  ) {
+    storage.get(socket).set(key, Number(currentValue) + 1);
     socket.write(serializer(`(integer) ${storage.get(socket).get(key)}`));
   } else {
-    console.log("entered else");
     socket.write(serializer(`(error) value is not an integer or out of range`));
   }
+};
+
+handleDecr = (socket, data) => {
+  const key = data[1];
+  if (!storage.get(socket)) {
+    storage.set(socket, new Map());
+  }
+  if (!storage.get(socket).get(key)) {
+    storage.get(socket).set(key, 0);
+  }
+  const currentValue = storage.get(socket).get(key);
+  if (
+    !isNaN(parseInt(currentValue)) &&
+    isValidInteger(parseInt(currentValue)-1)
+  ) {
+    storage.get(socket).set(key, Number(currentValue) - 1);
+    socket.write(serializer(`(integer) ${storage.get(socket).get(key)}`));
+  } else {
+    socket.write(serializer(`(error) value is not an integer or out of range`));
+  }
+};
+
+const isValidInteger = (value) => {
+  return (
+    Number.isInteger(value) &&
+    value <= Number.MAX_SAFE_INTEGER &&
+    value >= Number.MIN_SAFE_INTEGER
+  );
 };
